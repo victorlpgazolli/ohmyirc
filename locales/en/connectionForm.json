@@ -1,0 +1,15 @@
+{
+  "newConnectionTitle": "New connection",
+  "editConnectionTitle": "Edit connection",
+  "form": {
+    "name": "Connection name",
+    "username": "Your name",
+    "host": "Host",
+    "port": "Port",
+    "password": "Password",
+    "passwordHint": "Leave empty for no password",
+    "test": "Test connection",
+    "cancel": "Cancel",
+    "save": "Save"
+  }
+}

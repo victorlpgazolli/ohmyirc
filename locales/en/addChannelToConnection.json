@@ -1,0 +1,9 @@
+{
+    "title": "Add Channel",
+    "AddChannelMessage": "Please enter the channel name:",
+    "form": {
+        "missingChannelName": "Channel name is required",
+        "cancel": "Cancel",
+        "save": "Save"
+    }
+}

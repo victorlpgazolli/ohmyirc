@@ -1,0 +1,6 @@
+{
+  "channel": "channel",
+  "contextMenu": {
+    "addChannel": "contextMenu.addChannel"
+  }
+}

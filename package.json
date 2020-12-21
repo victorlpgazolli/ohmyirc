@@ -1,0 +1,146 @@
+{
+  "name": "chat_irc",
+  "version": "1.0.0",
+  "description": "A beautiful Redis GUI.",
+  "keywords": [],
+  "license": "MIT",
+  "author": "Diego Fernandes <diego.schell.f@gmail.com>",
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "rimraf dist && npm-run-all -p build:*",
+    "build:electron": "cross-env NODE_ENV=production webpack --config webpack/electron.webpack.js",
+    "build:react": "cross-env NODE_ENV=production webpack --config webpack/react.webpack.js",
+    "dev": "npm-run-all -p dev:react electron:serve",
+    "dev:electron": "cross-env NODE_ENV=development webpack --config webpack/electron.webpack.js && electron .",
+    "dev:react": "cross-env NODE_ENV=development webpack-dev-server --config webpack/react.webpack.js",
+    "electron:serve": "wait-on http-get://localhost:4000/ && npm run dev:electron",
+    "postinstall": "electron-builder install-app-deps",
+    "lint": "eslint --ext .tsx,.ts,.js src/ electron/",
+    "package": "yarn build && electron-builder build --publish never",
+    "test": "jest --passWithNoTests",
+    "tsc": "tsc --noEmit"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ],
+    "package.json": [
+      "sort-package-json"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "dependencies": {
+    "@babel/runtime": "7.10.5",
+    "@unform/core": "2.1.3",
+    "@unform/web": "2.1.3",
+    "electron-store": "5.2.0",
+    "electron-updater": "4.3.4",
+    "i18next": "19.6.3",
+    "i18next-electron-language-detector": "0.0.10",
+    "i18next-fs-backend": "1.0.7",
+    "ioredis": "4.17.3",
+    "irc": "0.5.2",
+    "npm-run-all": "4.1.5",
+    "polished": "3.6.5",
+    "react": "16.13.1",
+    "react-contextmenu": "2.14.0",
+    "react-dom": "16.13.1",
+    "react-i18next": "11.7.0",
+    "react-icons": "3.10.0",
+    "react-modal": "3.11.2",
+    "react-resizable": "1.10.1",
+    "react-spring": "8.0.27",
+    "react-use": "15.3.3",
+    "react-virtual": "2.2.1",
+    "recoil": "0.0.10",
+    "styled-components": "5.1.1",
+    "uuidv4": "6.2.0",
+    "wait-on": "5.1.0",
+    "yup": "0.29.2"
+  },
+  "devDependencies": {
+    "@babel/core": "7.10.5",
+    "@babel/plugin-transform-runtime": "7.10.5",
+    "@babel/preset-env": "7.10.4",
+    "@babel/preset-react": "7.10.4",
+    "@babel/preset-typescript": "7.10.4",
+    "@commitlint/cli": "9.1.1",
+    "@commitlint/config-conventional": "9.1.1",
+    "@commitlint/core": "9.1.1",
+    "@pmmmwh/react-refresh-webpack-plugin": "0.4.1",
+    "@testing-library/react": "10.4.7",
+    "@types/ioredis": "4.17.2",
+    "@types/jest": "26.0.7",
+    "@types/node": "12.12.53",
+    "@types/react": "16.9.41",
+    "@types/react-dom": "16.9.8",
+    "@types/react-modal": "3.10.6",
+    "@types/react-resizable": "1.7.2",
+    "@types/styled-components": "5.1.1",
+    "@types/yup": "0.29.3",
+    "@typescript-eslint/eslint-plugin": "3.7.1",
+    "@typescript-eslint/parser": "3.7.1",
+    "babel-loader": "8.1.0",
+    "commitizen": "4.1.2",
+    "cross-env": "7.0.2",
+    "cz-conventional-changelog": "3.2.0",
+    "electron": "9.1.2",
+    "electron-builder": "22.8.0",
+    "eslint": "7.5.0",
+    "eslint-config-prettier": "6.11.0",
+    "eslint-config-standard": "14.1.1",
+    "eslint-import-resolver-typescript": "2.0.0",
+    "eslint-plugin-import": "2.22.0",
+    "eslint-plugin-import-helpers": "1.1.0",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-prettier": "3.1.4",
+    "eslint-plugin-promise": "4.2.1",
+    "eslint-plugin-react": "7.20.5",
+    "eslint-plugin-react-hooks": "4.0.8",
+    "eslint-plugin-standard": "4.0.1",
+    "html-webpack-plugin": "4.3.0",
+    "husky": "4.2.5",
+    "jest": "26.1.0",
+    "json-schema-typed": "7.0.3",
+    "lint-staged": "10.2.11",
+    "prettier": "2.0.5",
+    "react-refresh": "0.8.3",
+    "rimraf": "3.0.2",
+    "sort-package-json": "1.44.0",
+    "ts-jest": "26.1.4",
+    "webpack": "4.44.0",
+    "webpack-cli": "3.3.12",
+    "webpack-dev-server": "3.11.0"
+  },
+  "build": {
+    "appId": "com.vtrgzll.chat_irc",
+    "productName": "Chat IRC",
+    "files": [
+      "dist/"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development"
+    },
+    "directories": {
+      "buildResources": "build",
+      "output": "release"
+    }
+  }
+}

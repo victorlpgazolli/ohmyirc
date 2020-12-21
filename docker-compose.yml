@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  irc:
+    image: inspircd/inspircd-docker
+    ports:
+      - "6667:6667"

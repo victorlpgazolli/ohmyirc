@@ -1,0 +1,7 @@
+{
+  "form": {
+    "confirmDeletion": "form.confirmDeletion",
+    "missingChannelName": "form.missingChannelName"
+  },
+  "confirmDeletionMessage": "confirmDeletionMessage"
+}
