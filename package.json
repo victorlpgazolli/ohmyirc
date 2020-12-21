@@ -1,10 +1,10 @@
 {
-  "name": "chat_irc",
+  "name": "ohmyirc",
   "version": "1.0.0",
-  "description": "A beautiful Redis GUI.",
+  "description": "A beautiful IRC client",
   "keywords": [],
   "license": "MIT",
-  "author": "Diego Fernandes <diego.schell.f@gmail.com>",
+  "author": "Victor Gazolli",
   "main": "./dist/main.js",
   "scripts": {
     "build": "rimraf dist && npm-run-all -p build:*",
@@ -124,8 +124,8 @@
     "webpack-dev-server": "3.11.0"
   },
   "build": {
-    "appId": "com.vtrgzll.chat_irc",
-    "productName": "Chat IRC",
+    "appId": "com.vtrgzll.ohmyirc",
+    "productName": "Oh My IRC",
     "files": [
       "dist/"
     ],

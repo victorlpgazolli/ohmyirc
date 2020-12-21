@@ -57,7 +57,7 @@ const Header = () => {
 
   return (
     <Container>
-      <strong>Chat IRC</strong>
+      <strong>Oh My IRC</strong>
 
       {shouldUseMacOSWindowActions ? (
         <WindowActions position="left" shouldShowIconsOnHover>
