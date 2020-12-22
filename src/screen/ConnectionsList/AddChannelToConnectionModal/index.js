@@ -1,27 +1,19 @@
 import React, { useRef, useCallback, memo } from 'react'
 import { useTranslation, Trans } from 'react-i18next'
-import { FiSave, FiTrash } from 'react-icons/fi'
+import { FiSave } from 'react-icons/fi'
 import { useToggle } from 'react-use'
 
-import { FormHandles } from '@unform/core'
 import { Form } from '@unform/web'
 import { useSetRecoilState } from 'recoil'
 
-import { channelsState, connectionsState, currentChannelState } from '../../../atoms/connections'
+import { connectionsState } from '../../../atoms/connections'
 import Button from '../../../components/Button'
 import Input from '../../../components/Form/Input'
-import Modal, { SharedModalProps } from '../../../components/Modal'
+import Modal from '../../../components/Modal'
 import { useToast } from '../../../context/toast'
-import { deleteAndGetConnections } from '../../../services/connection/DeleteConnectionService'
 import { TextContent, ActionsContainer, ButtonGroup } from './styles'
-import { useRecoilState } from 'recoil'
-import { joinChannel, connection } from '../../../services/RedisConnection'
 
-
-
-
-
-const DeleteConnectionModal = ({
+const AddChannelToConnection = ({
     visible,
     onRequestClose,
 }) => {
@@ -56,16 +48,11 @@ const DeleteConnectionModal = ({
 
                 newChannel.name = "#" + newChannel.name;
 
-                addToast({
-                    type: 'success',
-                    title: 'Added Channel',
-                })
-
                 onRequestClose(newChannel)
             } catch (error) {
                 addToast({
                     type: 'error',
-                    title: 'Error deleting connection',
+                    title: 'Error creating channel',
                     description: error.message || 'Unexpected error occurred, try again.'
                 })
             } finally {
@@ -110,4 +97,4 @@ const DeleteConnectionModal = ({
     )
 }
 
-export default memo(DeleteConnectionModal)
+export default memo(AddChannelToConnection)

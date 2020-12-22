@@ -1,16 +1,15 @@
-import { connection } from '../RedisConnection'
 
 export function loadUsersFromChannel({
   channel
 }){
-  if (!connection) {
+  if (!window.ircConnection) {
     throw new Error('IRC connection not established')
   }
   const {
     name: channelName
   } = channel;
 
-  const channelInfo = connection?.chans?.[channelName] || { users: [] }
+  const channelInfo = window.ircConnection?.chans?.[channelName] || { users: [] }
 
   const users = Object.keys(channelInfo.users)
 

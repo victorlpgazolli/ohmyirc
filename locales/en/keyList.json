@@ -1,5 +1,6 @@
 {
-  "empty": "No channel selected",
+  "empty": "No server selected",
   "search": "Search...",
-  "keys": "keys"
+  "users": "users",
+  "mode": "mode"
 }

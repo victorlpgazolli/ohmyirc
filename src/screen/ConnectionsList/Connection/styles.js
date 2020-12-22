@@ -2,9 +2,20 @@ import styled, { css, keyframes } from 'styled-components'
 
 
 export const Container = styled.li`
-  > div > button {
-    width: 100%;
+  > div  {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+  }
+  > div > a {
+    cursor: pointer;
     padding: 16px;
+    padding-right: 18px;
+  }
+  > div > button {
+    padding: 16px;
+    flex: 1;
     display: flex;
     align-items: center;
     background: transparent;
@@ -36,9 +47,9 @@ export const Container = styled.li`
     }
 
     ${props =>
-      !props.connected &&
-      !props.errored &&
-      css`
+    !props.connected &&
+    !props.errored &&
+    css`
         background: ${props => props.theme.backgrounds.darker};
 
         &:hover {
@@ -85,6 +96,10 @@ export const Container = styled.li`
     props.connected &&
     css`
       background: ${props => props.theme.colors.purple};
+      svg {
+        visibility: visible;
+        opacity: 1;
+      }
     `}
 
   ${props =>
@@ -114,6 +129,8 @@ export const DisconnectButton = styled.div`
 
 export const DatabaseList = styled.div`
   padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
 `
 
 export const Database = styled.button`

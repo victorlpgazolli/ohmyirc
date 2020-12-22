@@ -20,6 +20,7 @@ import {
 import EmptyContent from '../../components/EmptyContent'
 import { useWindowSize } from '../../hooks/useWindowSize'
 import { loadUsersFromChannel } from '../../services/database/loadUsersFromChannel'
+import { loadConfigFromConnection } from '../../services/database/loadConfigFromConnection'
 import SearchInput from './SearchInput'
 import {
   Container,
@@ -33,6 +34,8 @@ import {
   KeyTextContainer,
   KeyTitle
 } from './styles'
+import MessageOfTheDay from '../ConnectionsList/MessageOfTheDay'
+
 
 const KeyList = () => {
   const parentRef = useRef(null)
@@ -44,10 +47,11 @@ const KeyList = () => {
   const [filter, setFilter] = useState('')
   const [keys, setKeys] = useState([])
 
-  const [currentConnection] = useRecoilState(currentConnectionState)
-  const [currentChannel] = useRecoilState(currentChannelState)
+  const [currentConnection, setCurrentConnection] = useRecoilState(currentConnectionState)
+  const [currentChannel, setCurrentChannel] = useRecoilState(currentChannelState)
   const [selectedChannel, setSelectedChannel] = useState(false)
   const loadUsersInterval = useRef(null)
+  const loadConfigInterval = useRef(null)
 
   useDebounce(
     () => {
@@ -80,11 +84,30 @@ const KeyList = () => {
 
 
   useEffect(() => {
+    const conn = Object.assign({}, currentConnection)
+    if (conn) {
+
+      loadConfigInterval.current = setTimeout(() => {
+        if (!window.ircConnection) return;
+
+        const config = loadConfigFromConnection();
+
+        setCurrentConnection(c => ({
+          ...c,
+          ...config
+        }))
+      }, 1000);
+    }
+  }, [JSON.stringify(currentConnection)])
+
+  useEffect(() => {
     const channel = Object.assign({}, currentChannel)
     if (channel) {
       setSelectedChannel(channel?.name)
 
       loadUsersInterval.current = setTimeout(() => {
+        if (!window.ircConnection) return setKeys([])
+
         const users = loadUsersFromChannel({
           channel
         });
@@ -105,11 +128,13 @@ const KeyList = () => {
         <>
           <Header>
             <HeaderTextContainer>
-              <HeaderTitle>{currentConnection?.name}</HeaderTitle>
+              <HeaderTitle>{selectedChannel}</HeaderTitle>
               <HeaderDatabaseDetails>
-                <span>{selectedChannel}</span>
                 <span>
-                  {currentChannel?.users} {t('users')}
+                  {currentChannel?.users?.length} {t('users')}
+                </span>
+                <span>
+                  {currentChannel?.mode} {t('mode')}
                 </span>
               </HeaderDatabaseDetails>
             </HeaderTextContainer>
@@ -151,8 +176,10 @@ const KeyList = () => {
           </KeyListWrapper>
         </>
       ) : (
-        <EmptyContent message={t('empty')} />
-      )}
+          currentConnection?.motd
+            ? <MessageOfTheDay motd={currentConnection?.motd} />
+            : <EmptyContent message={t('empty')} />
+        )}
     </Container>
   )
 }

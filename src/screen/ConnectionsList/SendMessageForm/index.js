@@ -17,11 +17,9 @@ import {
 
     Container
 } from './styles'
-import { sendMessageToChannel } from '../../../services/RedisConnection'
 
 const SendMesssageForm = ({
     channel,
-    connection,
     handleAddMessage
 }) => {
     const formRef = useRef(null)
@@ -46,11 +44,7 @@ const SendMesssageForm = ({
 
                 try {
 
-                    sendMessageToChannel({
-                        connection,
-                        message,
-                        channel: channel?.name
-                    })
+                    window.ircConnection.say(channel?.name, message)
                     handleAddMessage(message)
                 } catch (err) {
                     addToast({

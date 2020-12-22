@@ -1,5 +1,5 @@
 import { Client } from 'irc'
-import { configConnection } from '../RedisConnection';
+
 
 export function loadConnection({
   host,
@@ -18,6 +18,7 @@ export function loadConnection({
         nick: username,
         userName: username,
         realName: username,
+        showErrors: false,
       })
       connection.once('registered', function () {
         clearTimeout(stop)    
@@ -31,7 +32,8 @@ export function loadConnection({
                 name: channelName,
               }
           })
-          configConnection({ connection })
+          window.ircConnection = connection;
+
           resolve({
             channels,
             connection

@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRecoilValue } from 'recoil'
 import { currentChannelState, currentConnectionState, messagesPerChannelState } from '../../atoms/connections'
-import { connection } from '../../services/RedisConnection'
+
 import EmptyContent from '../../components/EmptyContent'
 import { Container, MessageFrom, MessageContainer, Messages } from './styles'
 import { defaultTheme } from '../../styles/theme'
@@ -60,10 +60,12 @@ const KeyContent = () => {
   useEffect(() => {
     if (currentChannel) {
       try {
-        if (connection?.addListener && currentChannel?.name)
-          connection.addListener('message' + currentChannel?.name, function (from, message) {
+        if (window.ircConnection?.addListener && currentChannel?.name) {
+
+          window.ircConnection.addListener('message' + currentChannel?.name, function (from, message) {
             onReceiveMessage(from, message)
           });
+        }
       } catch (error) {
 
       }
@@ -104,7 +106,6 @@ const KeyContent = () => {
             </Messages>
             <SendMessageForm
               channel={currentChannel}
-              connection={connection}
               handleAddMessage={handleAddMessage}
 
             />
