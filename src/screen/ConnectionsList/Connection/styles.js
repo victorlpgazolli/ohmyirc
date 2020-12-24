@@ -128,7 +128,6 @@ export const DisconnectButton = styled.div`
 `
 
 export const DatabaseList = styled.div`
-  padding-bottom: 8px;
   display: flex;
   flex-direction: column;
 `
@@ -162,11 +161,7 @@ export const Database = styled.button`
     background: rgba(0, 0, 0, 0.06);
   }
 
-  ${props =>
-    props.connected &&
-    css`
-      background: rgba(0, 0, 0, 0.1);
-    `}
+  ${props => props.style}
 `
 
 export const ConnectionError = styled.p`

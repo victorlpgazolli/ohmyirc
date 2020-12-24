@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { FiSend } from 'react-icons/fi'
 
 import { Form } from '@unform/web'
-import { useSetRecoilState } from 'recoil'
+
 import * as Yup from 'yup'
 
-import { connectionsState } from '../../../atoms/connections'
+
 import Button from '../../../components/Button'
 import Input from '../../../components/Form/Input'
 import { useToast } from '../../../context/toast'
@@ -19,12 +19,12 @@ import {
 } from './styles'
 
 const SendMesssageForm = ({
+    handleAddMessage,
     channel,
-    handleAddMessage
 }) => {
     const formRef = useRef(null)
     const { addToast } = useToast()
-    const setConnections = useSetRecoilState(connectionsState)
+
     const { t } = useTranslation('sendMessageForm')
 
     const handleSendMessage = useCallback(
@@ -43,15 +43,30 @@ const SendMesssageForm = ({
                 const { message } = data
 
                 try {
+                    const user = Array.isArray(channel?.users) && channel.users
+                        .filter(user => user.nick === channel?.irc_client?.user?.nick)
+                        .shift();
 
-                    window.ircConnection.say(channel?.name, message)
-                    handleAddMessage(message)
+                    const payload = {
+                        message,
+                        nick: user?.nick,
+                        hostname: user?.hostname,
+                        time: new Date().getTime(),
+                    }
+
+                    channel.say(payload.message)
+
+                    handleAddMessage(payload)
+
                 } catch (err) {
                     addToast({
                         type: 'error',
                         title: 'Error saving connection',
                         description: err.message || 'Unexpected error occurred, try again.'
                     })
+                }
+                finally {
+                    formRef.current.clearField("message")
                 }
             } catch (err) {
                 if (err instanceof Yup.ValidationError) {
@@ -64,8 +79,6 @@ const SendMesssageForm = ({
         },
         [
             addToast,
-            setConnections,
-
         ]
     )
 

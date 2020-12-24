@@ -6,7 +6,7 @@ export function deleteAndGetConnections(
   const currentConnections = connections.get('connections')
 
   const foundIndex = currentConnections.findIndex(
-    findConnection => findConnection.name === connection.name
+    findConnection => findConnection.host === connection.host
   )
 
   if (foundIndex > -1) {

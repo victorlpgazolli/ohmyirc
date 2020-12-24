@@ -14,15 +14,10 @@ import {
 } from 'react-icons/fi'
 import { useToggle } from 'react-use'
 
-import { useRecoilState, useSetRecoilState } from 'recoil'
 
-import {
-  currentConnectionState,
-  currentChannelState,
-  channelsState,
-} from '../../../atoms/connections'
+import { useDispatch, useSelector } from 'react-redux';
+
 import { useToast } from '../../../context/toast'
-import { loadConnection } from '../../../services/connection/LoadConnection'
 
 import ConnectionFormModal from '../ConnectionFormModal'
 import DeleteConnectionModal from '../DeleteConnectionModal'
@@ -37,229 +32,254 @@ import {
   DisconnectButton,
   ConnectionButton
 } from './styles'
+import { ircActionCreators } from 'react-irc'
+import { defaultTheme } from '../../../styles/theme'
+import { updateAndGetConnections } from '../../../services/connection/UpdateConnectionService'
+import { deleteAndGetConnections } from '../../../services/connection/DeleteConnectionService'
 
 
-const Connection = ({ connection, setConn }) => {
-  const [currentConnection, setCurrentConnection] = useRecoilState(
-    currentConnectionState
-  )
-  const [currentChannel, setCurrentChannel] = useRecoilState(
-    currentChannelState
-  )
-  const [channels, setChannels] = useRecoilState(
-    channelsState
-  )
+const Connection = ({ connection }) => {
+  const {
+    connections,
+    channels
+  } = useSelector(state => state.irc);
 
   const [connectionLoading, setConnectionLoading] = useState(false)
   const [isConnectionFailed, setIsConnectionFailed] = useState(false)
   const [isEditModalOpen, toggleEditModalOpen] = useToggle(false)
   const [isDeleteModalOpen, toggleDeleteModalOpen] = useToggle(false)
   const [isAddChannelModalOpen, toggleAddChannelModalOpen] = useToggle(false)
+  const [connected, setConnected] = useState(connections?.[connection?.host]?.connected);
   const { t } = useTranslation('connection')
 
+  const dispatch = useDispatch()
   const { addToast } = useToast()
 
   useEffect(() => {
-    if (currentConnection) {
-      setIsConnectionFailed(false)
-    }
-  }, [currentConnection])
 
-  const isConnected = useMemo(() => {
-    return currentConnection?.name === connection.name
-  }, [currentConnection?.name, connection.name])
+    setConnected(connections?.[connection?.host]?.connected)
+
+  }, [connections?.[connection?.host]?.connected])
+
+  const ircConnection = connections?.[connection?.host];
+
+  const connectionChannels = useMemo(
+    () => channels[connection?.host] || [],
+    [Object.values(channels).flat().length, connection?.host]
+  );
 
   const handleConnect = useCallback(async () => {
-    if (!isConnected) {
-      setConnectionLoading(true)
-      setCurrentConnection(undefined)
-      setCurrentChannel(undefined)
+    setConnectionLoading(true)
 
-      try {
+    try {
 
-        await loadConnection(connection);
+      const {
+        alreayIsConnectedToServer,
+      } = Object.entries(connections || {}).reduce((total, current) => {
+        const [host, value] = current;
+        const isSameHost = host === connection.host;
 
-        setCurrentConnection(connection)
-      } catch (error) {
-        alert(JSON.stringify(error))
-        setIsConnectionFailed(true)
-      } finally {
-        setConnectionLoading(false)
-      }
+        if (!isSameHost) {
+          dispatch(ircActionCreators.disconnect({
+            host,
+          }));
+        }
+
+        if (isSameHost && value?.connected) total.alreayIsConnectedToServer = true;
+
+        return total;
+      }, {
+        alreayIsConnectedToServer: false
+      })
+
+      if (alreayIsConnectedToServer) return;
+
+      dispatch(await ircActionCreators.connect({
+        host: connection.host,
+        port: connection.port,
+        username: connection.username,
+      }));
+      setConnected(true);
+
+      updateAndGetConnections(connection, {
+        ...connection,
+        selected: true
+      });
+
+    } catch (error) {
+      setIsConnectionFailed(true)
+    } finally {
+      setConnectionLoading(false)
     }
   }, [
     connection,
-    isConnected,
-    setCurrentConnection,
-      setCurrentChannel
+      ircConnection,
+      setIsConnectionFailed,
+      setConnected
   ])
 
-  const handleDisconnect = useCallback(async () => {
-    setCurrentConnection(undefined)
-    setCurrentChannel(undefined)
-    window.ircConnection.disconnect();
-  }, [setCurrentConnection, setCurrentChannel])
+  const handleDisconnect = useCallback(() => {
+    if (!connection?.host) return;
+
+    dispatch(ircActionCreators.disconnect({
+      host: connection.host
+    }))
+    setConnected(false)
+
+  }, [ircActionCreators.disconnect, connection?.host, setConnected])
 
   const postSavingConnection = useCallback(async () => {
     toggleEditModalOpen()
-    setCurrentConnection(undefined)
-    setCurrentChannel(undefined)
     setIsConnectionFailed(false)
-  }, [toggleEditModalOpen, setCurrentConnection, setCurrentChannel])
+  }, [toggleEditModalOpen,])
 
   const postSavingChannel = useCallback((channel) => {
     toggleAddChannelModalOpen()
     if (channel) handleSelectChannel(channel)
-  }, [toggleAddChannelModalOpen, handleSelectChannel, currentConnection?.name])
+  }, [toggleAddChannelModalOpen, handleSelectChannel])
 
+  const postDeletingConnection = useCallback(() => {
+    toggleDeleteModalOpen();
+    handleDisconnect()
+    deleteAndGetConnections(connection);
+  }, [toggleDeleteModalOpen, handleDisconnect])
 
-  const postDeletingConnection = useCallback(async () => {
-    toggleDeleteModalOpen()
-    setCurrentConnection(undefined)
-    setCurrentChannel(undefined)
-    window.ircConnection.disconnect();
-  }, [toggleDeleteModalOpen, setCurrentConnection, setCurrentChannel])
+  const handleSelectChannel = useCallback((channel) => {
+    try {
+      const alreayJoinedChannel = connectionChannels.some(channel => channel.name === channel?.name);
 
-  const handleSelectChannel = useCallback(
-    (channel) => {
+      if (alreayJoinedChannel) return;
 
-      try {
-        window.ircConnection.join(channel?.name)
+      dispatch(ircActionCreators.join({
+        channel: channel?.name,
+        host: connection?.host
+      }));
 
-        setCurrentChannel(channel)
-        setChannels((channels = []) => {
-          try {
-            const newChannels = channels.filter(c => c?.name !== channel?.name);
-            newChannels.push(channel);
-            return newChannels
-          } catch (error) {
-            return [channel]
-          }
-        });
-
-      } catch (error) {
-        alert(JSON.stringify(error))
-        addToast({
-          type: 'error',
-          title: 'Failed to connect to channel',
-          description:
-            'A connection to this Redis channel could not be established.'
-        })
-      }
-    },
-    [currentConnection?.name, addToast, setCurrentChannel, setChannels]
-  )
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Failed to connect to channel',
+        description:
+          'A connection to this IRC channel could not be established.'
+      })
+    }
+  }, [dispatch, ircActionCreators.join, connection])
 
   return (
     <>
-    <Container
-        key={connection.name}
-      connected={isConnected}
-      errored={isConnectionFailed}
-    >
-        <ContextMenuTrigger id={`connection_actions_menu:${connection.name}`}>
-        <button type="button" disabled={isConnected} onClick={handleConnect}>
+      <Container
+        key={connection.host}
+        connected={connected}
+        errored={isConnectionFailed}
+      >
+        <ContextMenuTrigger id={`connection_actions_menu:${connection.host}`}>
+          <button type="button" disabled={connected} onClick={handleConnect}>
             {connectionLoading && (
-            <Loading>
-              <FiLoader />
+              <Loading>
+                <FiLoader />
               </Loading>
-          )}
-            {connection.name}
+            )}
+            {connection.host}
 
           </button>
-        {
-            isConnected && (
-              <a disabled={isConnected} onClick={toggleAddChannelModalOpen}>
+          {
+            connected && (
+              <a disabled={connected} onClick={toggleAddChannelModalOpen}>
                 <FiPlusCircle />
               </a>
             )
           }
-      </ContextMenuTrigger>
+        </ContextMenuTrigger>
 
-      <ContextMenu
-          id={`connection_actions_menu:${connection.name}`}
-        className="connection-actions-menu"
-      >
-        {isConnected ? (
-          <MenuItem onClick={handleDisconnect}>
-            <DisconnectButton>
-              <FiMinusCircle />
-              {t('contextMenu.disconnect')}
-            </DisconnectButton>
+        <ContextMenu
+          id={`connection_actions_menu:${connection.host}`}
+          className="connection-actions-menu"
+        >
+          {connected ? (
+            <MenuItem onClick={handleDisconnect}>
+              <DisconnectButton>
+                <FiMinusCircle />
+                {t('contextMenu.disconnect')}
+              </DisconnectButton>
+            </MenuItem>
+          ) : (
+              <MenuItem onClick={handleConnect}>
+                <ConnectButton>
+                  <FiActivity />
+                  {t('contextMenu.connect')}
+                </ConnectButton>
+              </MenuItem>
+            )}
+
+          <MenuItem onClick={toggleEditModalOpen}>
+            <FiEdit2 />
+            {t('contextMenu.editSettings')}
           </MenuItem>
-        ) : (
-            <MenuItem onClick={handleConnect}>
-              <ConnectButton>
-                <FiActivity />
-                {t('contextMenu.connect')}
-              </ConnectButton>
-            </MenuItem>
-          )}
 
-        <MenuItem onClick={toggleEditModalOpen}>
-          <FiEdit2 />
-          {t('contextMenu.editSettings')}
-        </MenuItem>
+          <MenuItem onClick={toggleDeleteModalOpen}>
+            <FiTrash />
+            {t('contextMenu.deleteConnection')}
+          </MenuItem>
+          {
+            connected && (
+              <MenuItem onClick={toggleAddChannelModalOpen}>
+                <FiPlusCircle />
+                {t('contextMenu.addChannel')}
+              </MenuItem>
+            )
+          }
+        </ContextMenu>
 
-        <MenuItem onClick={toggleDeleteModalOpen}>
-          <FiTrash />
-          {t('contextMenu.deleteConnection')}
-        </MenuItem>
-        {
-          isConnected && (
-            <MenuItem onClick={toggleAddChannelModalOpen}>
-              <FiPlusCircle />
-              {t('contextMenu.addChannel')}
-            </MenuItem>
-          )
-        }
-      </ContextMenu>
+        {connected && !!connectionChannels?.length && (
+          <DatabaseList >
+            {connectionChannels.map(channel => (
+              <Database
+                style={{
+                  background: channel.name === "#geral"
+                    ? defaultTheme.colors.purple
+                    : "transparent"
+                }}
+                key={channel.name}
+                className={"channel:name:" + channel.name}
+                onClick={() => handleSelectChannel(channel)}
+                type="button"
+              >
+                <strong>{channel.name}</strong>
+                <span>
+                  {channel.keys} {t('channel')}
+                </span>
+              </Database>
+            ))}
+          </DatabaseList>
+        )}
 
-      {isConnected && !!channels?.length && (
-        <DatabaseList>
-          {channels.map(channel => (
-            <Database
-              connected={channels?.name === channel.name}
-              key={channel.name}
-              onClick={() => handleSelectChannel(channel)}
-              type="button"
-            >
-              <strong>{channel.name}</strong>
-              <span>
-                {channel.keys} {t('channel')}
-              </span>
-            </Database>
-          ))}
-        </DatabaseList>
-      )}
+        {isConnectionFailed && (
+          <ConnectionError>
+            {t('connectionFailed')}{' '}
+            <button type="button" onClick={handleConnect}>
+              {t('retry')}
+            </button>
+          </ConnectionError>
+        )}
+      </Container>
 
-      {isConnectionFailed && (
-        <ConnectionError>
-          {t('connectionFailed')}{' '}
-          <button type="button" onClick={handleConnect}>
-            {t('retry')}
-          </button>
-        </ConnectionError>
-      )}
-    </Container>
-
-    <ConnectionFormModal
-      visible={isEditModalOpen}
-      onRequestClose={postSavingConnection}
+      <ConnectionFormModal
+        visible={isEditModalOpen}
+        onRequestClose={postSavingConnection}
         connectionToEdit={connection}
-    />
+      />
 
-    <DeleteConnectionModal
-      visible={isDeleteModalOpen}
-      onRequestClose={postDeletingConnection}
+      <DeleteConnectionModal
+        visible={isDeleteModalOpen}
+        onRequestClose={postDeletingConnection}
         connectionToDelete={connection}
-    />
+      />
 
-    <AddChannelToConnectionModal
-      visible={isAddChannelModalOpen}
-      onRequestClose={postSavingChannel}
-    />
-  </>
+      <AddChannelToConnectionModal
+        visible={isAddChannelModalOpen}
+        onRequestClose={postSavingChannel}
+      />
+    </>
   )
 }
 

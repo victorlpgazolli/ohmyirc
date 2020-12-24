@@ -91,15 +91,21 @@ interface KeyTextContainerProps {
 
 export const KeyTextContainer = styled.button<KeyTextContainerProps>`
   display: flex;
+  flex: 1;
   flex-direction: row;
   align-items: center;
   color: ${props => props.theme.colors.white};
-
+  & .show-on-hover {
+    opacity: 0
+  }
   ${props =>
     !props.selected &&
     css`
       &:hover {
         color: ${props => transparentize(0.2, props.theme.colors.pink)};
+        & .show-on-hover {
+          opacity: 1
+        }
       }
     `}
 
@@ -114,6 +120,13 @@ export const KeyTitle = styled.p`
   font-weight: 500;
   font-size: 14px;
   line-height: 16px;
+`
+export const KeyInfo = styled.p`
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16px;
+  color: ${props => props.theme.colors.opaque};
+  padding-left: 5px;
 `
 
 export const KeyChidrenCount = styled.p`

@@ -2,20 +2,18 @@ import React, { useRef, useCallback, memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiActivity, FiSave } from 'react-icons/fi'
 import { useToggle } from 'react-use'
+import { ircActionCreators } from 'react-irc'
 
 import { FormHandles } from '@unform/core'
 import { Form } from '@unform/web'
-import { useSetRecoilState } from 'recoil'
+
 import * as Yup from 'yup'
 
-import { connectionsState } from '../../../atoms/connections'
+
 import Button from '../../../components/Button'
 import Input from '../../../components/Form/Input'
 import Modal, { SharedModalProps } from '../../../components/Modal'
 import { useToast } from '../../../context/toast'
-import { createAndGetConnections } from '../../../services/connection/CreateConnectionService'
-import { testConnection } from '../../../services/connection/TestConnectionService'
-import { updateAndGetConnections } from '../../../services/connection/UpdateConnectionService'
 import getValidationErrors from '../../../utils/getValidationErrors'
 import {
   ActionsContainer,
@@ -23,6 +21,9 @@ import {
   InputGroup,
   TestConnectionButton
 } from './styles'
+import { useDispatch } from 'react-redux'
+import { createAndGetConnections } from '../../../services/connection/CreateConnectionService'
+import { updateAndGetConnections } from '../../../services/connection/UpdateConnectionService'
 
 const ConnectionFormModal = ({
   visible,
@@ -31,7 +32,8 @@ const ConnectionFormModal = ({
 }) => {
   const formRef = useRef(null)
   const { addToast } = useToast()
-  const setConnections = useSetRecoilState(connectionsState)
+  const dispatch = useDispatch();
+
   const { t } = useTranslation('connectionForm')
 
   const [testConnectionLoading, toggleTestConnectionLoading] = useToggle(false)
@@ -71,13 +73,19 @@ const ConnectionFormModal = ({
             host,
             port: Number(port),
             username,
+            channels: [],
+            selected: false,
           }
 
           const connections = connectionToEdit
             ? updateAndGetConnections(connectionToEdit, connectionData)
             : createAndGetConnections(connectionData)
 
-          setConnections(connections)
+          dispatch(await ircActionCreators.connect({
+            host: connectionData.host,
+            port: connectionData.port,
+            username: connectionData.username,
+          }));
 
           addToast({
             type: 'success',
@@ -105,7 +113,6 @@ const ConnectionFormModal = ({
     },
     [
       addToast,
-      setConnections,
       toggleCreateConnectionLoading,
       connectionToEdit,
       handleCloseModal
@@ -139,11 +146,11 @@ const ConnectionFormModal = ({
         abortEarly: false
       })
 
-      await testConnection({
-        host,
-        port: Number(port),
-        username,
-      })
+      // await testConnection({
+      //   host,
+      //   port: Number(port),
+      //   username,
+      // })
 
       addToast({
         type: 'success',

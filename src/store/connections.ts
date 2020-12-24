@@ -23,10 +23,22 @@ export const connections = new Store({
             type: JSONSchemaType.Number,
             default: 6667
           },
-          password: {
+          username: {
             type: JSONSchemaType.String,
-            default: ''
-          }
+            default: 6667
+          },
+          channels: {
+            type: JSONSchemaType.Array,
+            default: []
+          },
+          messages: {
+            type: JSONSchemaType.Array,
+            default: []
+          },
+          selected: {
+            type: JSONSchemaType.Boolean,
+            default: false
+          },
         }
       }
     }

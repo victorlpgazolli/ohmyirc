@@ -4,9 +4,9 @@ import { FiSave } from 'react-icons/fi'
 import { useToggle } from 'react-use'
 
 import { Form } from '@unform/web'
-import { useSetRecoilState } from 'recoil'
 
-import { connectionsState } from '../../../atoms/connections'
+
+
 import Button from '../../../components/Button'
 import Input from '../../../components/Form/Input'
 import Modal from '../../../components/Modal'
@@ -20,7 +20,7 @@ const AddChannelToConnection = ({
     const formRef = useRef(null)
     const { t } = useTranslation('addChannelToConnection')
     const { addToast } = useToast()
-    const setConnections = useSetRecoilState(connectionsState)
+
 
     const [addChannelToConnectionLoading, toggleAddChannelToConnectionLoading] = useToggle(
         false
@@ -63,7 +63,6 @@ const AddChannelToConnection = ({
             toggleAddChannelToConnectionLoading,
             t,
             addToast,
-            setConnections,
         ]
     )
 

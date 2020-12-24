@@ -1,113 +1,166 @@
-import React, { memo, useEffect, useState } from 'react'
+import React, { memo, useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useRecoilValue } from 'recoil'
-import { currentChannelState, currentConnectionState, messagesPerChannelState } from '../../atoms/connections'
-
+import { connections as storedConnections } from '../../store/connections'
 import EmptyContent from '../../components/EmptyContent'
 import { Container, MessageFrom, MessageContainer, Messages } from './styles'
 import { defaultTheme } from '../../styles/theme'
-import { useRecoilState } from 'recoil'
+
 import SendMessageForm from '../ConnectionsList/SendMessageForm'
-import { useCallback } from 'react'
+import { useSelector } from 'react-redux'
+import { useVirtual } from 'react-virtual'
+import { useWindowSize } from '../../hooks/useWindowSize'
+import { saveMessageToConnection } from '../../services/connection/SaveMessageToConnection'
 
 const KeyContent = () => {
-  const currentChannel = useRecoilValue(currentChannelState)
-  const currentConnection = useRecoilValue(currentConnectionState)
-  const [messagesPerChannel, setMessagesPerChannel] = useRecoilState(messagesPerChannelState)
-  const [keyContent, setKeyContent] = useState([])
-  const [colorPerUser, setColorPerUser] = useState({})
-  const { t } = useTranslation('keyContent')
+  const {
+    channels,
+    connections
+  } = useSelector(state => state.irc);
 
-  const onReceiveMessage = useCallback((from, message) => {
-    const colors = Object.keys(defaultTheme.colors)
-    const randomColorIndex = (Math.random() * colors.length).toFixed(0)
-    const colorSelected = colors[randomColorIndex]
+  const { t } = useTranslation('keyContent')
+  const parentRef = useRef(null)
+
+  const [selectedChannel, setSelectedChannel] = useState(false)
+  const [isListening, setListening] = useState(false)
+
+
+  const activeConnection = useMemo(
+    () => Object.values(connections)
+      .filter(({ connected }) => connected)
+      .shift(),
+    [Object.values(connections)]
+  )
+
+  const [keyContent, setKeyContent] = useState([]);
+
+
+  const rowVirtualizer = useVirtual({
+    size: keyContent?.length,
+    parentRef,
+    estimateSize: useCallback(() => 33, [])
+  })
+  useEffect(() => {
+    const {
+      host
+    } = activeConnection?.options || {};
+
+    const [channelToShow] = channels?.[host] || [];
+
+    setSelectedChannel(channelToShow)
+
+  }, [channels, connections, activeConnection])
+
+  const onReceiveMessage = useCallback((from, message, metadata) => {
+    const {
+      nick: username,
+      hostname,
+      host
+    } = from
+    const {
+      time,
+    } = metadata
+
     const userMessage = {
       message,
-      from,
-      color: defaultTheme.colors[colorSelected],
+      from: username,
+      channel: selectedChannel?.name,
+      hostname,
+      time,
     }
-    setColorPerUser(users => ({
-      [userMessage.from]: userMessage.color,
-      ...users,
-    }))
-    setMessagesPerChannel((channelsObj = {}) => {
-      const channelMessages = channelsObj?.[currentChannel?.name] || []
-      const hasMessagesForChannel = Array.isArray(channelMessages) && channelMessages.length;
 
-      if (!hasMessagesForChannel) return {
-        [currentChannel?.name]: [userMessage]
-      }
+    const allMessages = saveMessageToConnection(host, userMessage);
 
-      return {
-        ...channelsObj,
-        [currentChannel?.name]: [
-          ...channelMessages,
-          userMessage,
-        ]
-      }
-    })
-
-    setKeyContent(last => [
-      ...last,
-      {
-        from,
-        message
-      },
-    ]);
-  }, [setMessagesPerChannel, setColorPerUser, setKeyContent])
+    setKeyContent(allMessages);
+  }, [setKeyContent, selectedChannel?.name])
 
   useEffect(() => {
-    if (currentChannel) {
-      try {
-        if (window.ircConnection?.addListener && currentChannel?.name) {
-
-          window.ircConnection.addListener('message' + currentChannel?.name, function (from, message) {
-            onReceiveMessage(from, message)
-          });
-        }
-      } catch (error) {
-
-      }
+    if (selectedChannel?.name && !isListening) {
+      setListening(true);
+      activeConnection.on('message', function (event) {
+        handleAddMessage(event)
+      });
     }
-  }, [currentChannel]);
+  }, [selectedChannel?.name, Object.keys(channels), isListening]);
+  const { height } = useWindowSize({ watch: true })
 
   useEffect(() => {
-    const channel = Object.assign({}, currentChannel);
-    const messages = messagesPerChannel?.[channel?.name] || [];
-    setKeyContent(messages)
-  }, [JSON.stringify(currentChannel)]);
 
-  const handleAddMessage = useCallback((message) => {
-    const from = currentConnection?.username;
-    onReceiveMessage(from, message)
-  }, [currentConnection?.username, onReceiveMessage])
+    if (isListening && selectedChannel?.name && activeConnection?.options) {
+      const {
+        host
+      } = activeConnection?.options || {};
+
+      const messages = storedConnections
+        .get("connections")
+        ?.find(conn => conn.host === host)
+        ?.messages
+        ?.filter(message => message?.channel === selectedChannel?.name) || [];
+
+      setKeyContent(messages);
+    }
+  }, [selectedChannel?.name, isListening, channels, connections, activeConnection]);
+
+  useEffect(() => {
+
+    rowVirtualizer.scrollToIndex(keyContent?.length - 1)
+  }, [keyContent?.length]);
+
+  const handleAddMessage = useCallback(({
+    message,
+    nick,
+    hostname,
+    time,
+  }) => {
+
+    const {
+      host
+    } = activeConnection?.options || {};
+
+    const from = {
+      nick,
+      hostname,
+      host,
+    }
+    const metadata = {
+      time,
+    }
+
+    onReceiveMessage(from, message, metadata);
+
+  }, [onReceiveMessage, selectedChannel?.name,])
 
   return (
-    <Container>
-      {!currentChannel?.name ? (
+    <Container ref={parentRef}>
+      {!selectedChannel?.name ? (
         <EmptyContent message={t('empty')} />
       ) : (
           <>
-            <Messages>
-              {keyContent.map((key) => {
-                return (
-                  <MessageContainer>
-                    <MessageFrom
-                      color={colorPerUser[key.from]}
-                      show={1}
-                    >
-                      {key.from}
-                    </MessageFrom>
-                    {key.message}
-                  </MessageContainer>
-                )
-              })}
+            <Messages style={{
+              height: height - 150,
+              paddingBottom: "10px"
+            }}>
+              <Messages style={{
+                height: `${rowVirtualizer.totalSize}px`,
+                overflowY: "scroll"
+              }}>
+                {rowVirtualizer.virtualItems.map((virtualRow) => {
+                  const key = keyContent[virtualRow.index]
+                  return (
+                    <MessageContainer>
+                      <MessageFrom
+                        show={1}
+                      >
+                        {key.from}
+                      </MessageFrom>
+                      {key.message}
+                    </MessageContainer>
+                  )
+                })}
+              </Messages>
             </Messages>
             <SendMessageForm
-              channel={currentChannel}
               handleAddMessage={handleAddMessage}
-
+              channel={selectedChannel}
             />
           </>
         )}

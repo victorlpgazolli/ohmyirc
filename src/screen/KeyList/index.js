@@ -11,16 +11,10 @@ import { useTranslation } from 'react-i18next'
 import { useDebounce } from 'react-use'
 import { useVirtual } from 'react-virtual'
 
-import { useRecoilState } from 'recoil'
 
-import {
-  currentChannelState,
-  currentConnectionState,
-} from '../../atoms/connections'
 import EmptyContent from '../../components/EmptyContent'
 import { useWindowSize } from '../../hooks/useWindowSize'
-import { loadUsersFromChannel } from '../../services/database/loadUsersFromChannel'
-import { loadConfigFromConnection } from '../../services/database/loadConfigFromConnection'
+
 import SearchInput from './SearchInput'
 import {
   Container,
@@ -32,26 +26,48 @@ import {
   KeyListContainer,
   Key,
   KeyTextContainer,
-  KeyTitle
+  KeyTitle,
+  KeyInfo
 } from './styles'
 import MessageOfTheDay from '../ConnectionsList/MessageOfTheDay'
+import { useSelector } from 'react-redux'
 
 
 const KeyList = () => {
   const parentRef = useRef(null)
+  const {
+    channels,
+    connections
+  } = useSelector(state => state.irc);
 
   const { width } = useWindowSize({ watch: false })
   const { t } = useTranslation('keyList')
 
   const [searchInputValue, setSearchInputValue] = useState('')
   const [filter, setFilter] = useState('')
-  const [keys, setKeys] = useState([])
 
-  const [currentConnection, setCurrentConnection] = useRecoilState(currentConnectionState)
-  const [currentChannel, setCurrentChannel] = useRecoilState(currentChannelState)
   const [selectedChannel, setSelectedChannel] = useState(false)
+  const [users, setUsers] = useState([])
   const loadUsersInterval = useRef(null)
   const loadConfigInterval = useRef(null)
+
+  const activeConnection = useMemo(
+    () => Object.values(connections)
+      .filter(({ connected }) => connected)
+      .shift(),
+    [Object.values(connections)]
+  )
+
+  useEffect(() => {
+    const {
+      host
+    } = activeConnection?.options || {};
+
+    const [channelToShow] = channels?.[host] || [];
+
+    setSelectedChannel(channelToShow?.name)
+
+  }, [channels, connections, activeConnection])
 
   useDebounce(
     () => {
@@ -61,13 +77,29 @@ const KeyList = () => {
     [searchInputValue]
   )
 
-  const filteredKeys = useMemo(() => {
-    if (!filter) {
-      return keys
-    }
+  const channel = useMemo(() => {
+    const {
+      host
+    } = activeConnection?.options || {};
 
-    return keys.filter(key => key.includes(filter))
-  }, [filter, keys])
+    return Array.isArray(channels[host]) && channels[host]
+      .filter(channel => channel.name === selectedChannel)
+      .shift()
+  }, [channels?.length, selectedChannel]);
+
+  const user = useMemo(() => {
+    return Array.isArray(channel?.users) && channel.users
+      .filter(user => user.nick === channel?.irc_client?.user?.nick)
+      .shift();
+  }, [channel, selectedChannel])
+
+  const filteredKeys = useMemo(() => {
+    if (!Array.isArray(channel?.users)) return []
+
+    if (!filter) return channel?.users
+
+    return channel.users.filter(key => JSON.stringify(key).includes(filter))
+  }, [filter, channel?.users])
 
   const rowVirtualizer = useVirtual({
     size: filteredKeys.length,
@@ -82,40 +114,33 @@ const KeyList = () => {
     []
   )
 
+  // useEffect(() => {
+  //   const conn = Object.assign({}, currentConnection)
+  //   if (conn) {
+
+  //     loadConfigInterval.current = setTimeout(() => {
+  //       if (!window.ircConnection) return;
+
+  //       const config = loadConfigFromConnection();
+
+  //       setCurrentConnection(c => ({
+  //         ...c,
+  //         ...config
+  //       }))
+  //     }, 1000);
+  //   }
+  // }, [JSON.stringify(currentConnection)])
 
   useEffect(() => {
-    const conn = Object.assign({}, currentConnection)
-    if (conn) {
+    const {
+      host
+    } = activeConnection?.options || {};
 
-      loadConfigInterval.current = setTimeout(() => {
-        if (!window.ircConnection) return;
+    const [channelToShow] = channels?.[host] || [];
 
-        const config = loadConfigFromConnection();
+    if (channelToShow?.updateUsers) channelToShow.updateUsers(({ users }) => setUsers(users))
 
-        setCurrentConnection(c => ({
-          ...c,
-          ...config
-        }))
-      }, 1000);
-    }
-  }, [JSON.stringify(currentConnection)])
-
-  useEffect(() => {
-    const channel = Object.assign({}, currentChannel)
-    if (channel) {
-      setSelectedChannel(channel?.name)
-
-      loadUsersInterval.current = setTimeout(() => {
-        if (!window.ircConnection) return setKeys([])
-
-        const users = loadUsersFromChannel({
-          channel
-        });
-
-        setKeys(users)
-      }, 1000);
-    }
-  }, [JSON.stringify(currentChannel)])
+  }, [channels, connections, activeConnection])
 
   return (
     <Container
@@ -124,18 +149,24 @@ const KeyList = () => {
       minConstraints={[400, Infinity]}
       maxConstraints={[width - 300 - 100, Infinity]}
     >
-      {selectedChannel ? (
+      {channel ? (
         <>
           <Header>
             <HeaderTextContainer>
               <HeaderTitle>{selectedChannel}</HeaderTitle>
               <HeaderDatabaseDetails>
-                <span>
-                  {currentChannel?.users?.length} {t('users')}
-                </span>
-                <span>
-                  {currentChannel?.mode} {t('mode')}
-                </span>
+                {
+                  users?.length &&
+                  <span>
+                    {users?.length} {t('users')}
+                  </span>
+                }
+                {
+                  user?.modes &&
+                  <span>
+                    {user?.modes} {t('mode')}
+                  </span>
+                }
               </HeaderDatabaseDetails>
             </HeaderTextContainer>
             <SearchInput
@@ -167,7 +198,17 @@ const KeyList = () => {
                   >
                     <KeyTextContainer
                     >
-                      <KeyTitle>{key}</KeyTitle>
+                      <KeyTitle>{key?.nick}</KeyTitle>
+                      {
+                        key?.hostname
+                          ? <KeyInfo className="show-on-hover">| {key?.hostname}</KeyInfo>
+                          : null
+                      }
+                      {
+                        key?.modes?.length
+                          ? <KeyInfo className="show-on-hover">| {key?.modes}</KeyInfo>
+                          : null
+                      }
                     </KeyTextContainer>
                   </Key>
                 )
@@ -176,9 +217,10 @@ const KeyList = () => {
           </KeyListWrapper>
         </>
       ) : (
-          currentConnection?.motd
-            ? <MessageOfTheDay motd={currentConnection?.motd} />
-            : <EmptyContent message={t('empty')} />
+          // currentConnection?.motd
+          //   ? <MessageOfTheDay motd={currentConnection?.motd} />
+          //   : 
+          <EmptyContent message={t('empty')} />
         )}
     </Container>
   )

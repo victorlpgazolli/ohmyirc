@@ -10,10 +10,9 @@ export const Container = styled.div`
 
 export const MessageFrom = styled.span(props => ({
   opacity: +props.show,
-  color: props.theme.backgrounds.lighter,
+  color: props.theme.backgrounds.white,
   flexDirection: "row",
   padding: "5px 8px",
-  background: props.color,
   borderRadius: "10px",
   marginRight: "8px",
   flex: "1"

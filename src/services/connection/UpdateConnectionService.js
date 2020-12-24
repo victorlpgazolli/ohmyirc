@@ -7,7 +7,7 @@ export function updateAndGetConnections(
   const currentConnections = connections.get('connections')
 
   const foundIndex = currentConnections.findIndex(
-    findConnection => findConnection.name === oldConnection.name
+    findConnection => findConnection.host === oldConnection.host
   )
 
   if (foundIndex > -1) {

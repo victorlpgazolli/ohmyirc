@@ -4,18 +4,22 @@ import { FiPlusCircle } from 'react-icons/fi'
 import { useToggle } from 'react-use'
 
 import { ipcRenderer } from 'electron'
-import { useRecoilState } from 'recoil'
+import { useSelector } from 'react-redux';
 
-import { connectionsState } from '../../atoms/connections'
+
 import Connection from './Connection'
 import ConnectionFormModal from './ConnectionFormModal'
 import { Container, Connections } from './styles'
+import { connections } from '../../store/connections'
+import { useMemo } from 'react'
 
-const ConnectionsList = ({
-  setConn
-}) => {
-  const [connections] = useRecoilState(connectionsState)
-  const [isCreateModalOpen, toggleCreateModalOpen] = useToggle(false)
+const ConnectionsList = () => {
+  const {
+    servers,
+  } = useSelector(state => state.irc)
+
+  const [isCreateModalOpen, toggleCreateModalOpen] = useToggle(false);
+
   const { t } = useTranslation('connectionList')
 
   useEffect(() => {
@@ -24,7 +28,8 @@ const ConnectionsList = ({
     return () => {
       ipcRenderer.removeListener('newConnection', toggleCreateModalOpen)
     }
-  }, [toggleCreateModalOpen])
+  }, [toggleCreateModalOpen]);
+
 
   return (
     <>
@@ -44,8 +49,8 @@ const ConnectionsList = ({
           </header>
 
           <ul>
-            {connections.map(connection => (
-              <Connection setConn={setConn} key={connection.name} connection={connection} />
+            {connections.get('connections')?.map(connection => (
+              <Connection key={connection.name} connection={connection} />
             ))}
           </ul>
         </Connections>

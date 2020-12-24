@@ -18,7 +18,8 @@
     "lint": "eslint --ext .tsx,.ts,.js src/ electron/",
     "package": "yarn build && electron-builder build --publish never",
     "test": "jest --passWithNoTests",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "irc": "cd node_modules/react-irc/; rm rollup.config.js; cp ../../../react-irc/rollup.config.js .; npm i; npm run build"
   },
   "husky": {
     "hooks": {
@@ -50,7 +51,6 @@
     "i18next-electron-language-detector": "0.0.10",
     "i18next-fs-backend": "1.0.7",
     "ioredis": "4.17.3",
-    "irc": "0.5.2",
     "npm-run-all": "4.1.5",
     "polished": "3.6.5",
     "react": "16.13.1",
@@ -58,12 +58,17 @@
     "react-dom": "16.13.1",
     "react-i18next": "11.7.0",
     "react-icons": "3.10.0",
+    "react-irc": "git+https://github.com/victorlpgazolli/react-irc.git#add/methods",
     "react-modal": "3.11.2",
+    "react-redux": "7.2.2",
     "react-resizable": "1.10.1",
     "react-spring": "8.0.27",
     "react-use": "15.3.3",
     "react-virtual": "2.2.1",
-    "recoil": "0.0.10",
+    "redux": "4.0.5",
+    "redux-logger": "3.0.6",
+    "redux-persist": "6.0.0",
+    "redux-thunk": "2.3.0",
     "styled-components": "5.1.1",
     "uuidv4": "6.2.0",
     "wait-on": "5.1.0",

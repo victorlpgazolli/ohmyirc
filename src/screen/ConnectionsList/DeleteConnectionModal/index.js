@@ -5,15 +5,16 @@ import { useToggle } from 'react-use'
 
 import { FormHandles } from '@unform/core'
 import { Form } from '@unform/web'
-import { useSetRecoilState } from 'recoil'
 
-import { connectionsState } from '../../../atoms/connections'
+
+
 import Button from '../../../components/Button'
 import Input from '../../../components/Form/Input'
-import Modal, { SharedModalProps } from '../../../components/Modal'
+import Modal from '../../../components/Modal'
 import { useToast } from '../../../context/toast'
-import { deleteAndGetConnections } from '../../../services/connection/DeleteConnectionService'
+
 import { TextContent, ActionsContainer, ButtonGroup } from './styles'
+import { deleteAndGetConnections } from '../../../services/connection/DeleteConnectionService'
 
 
 
@@ -27,7 +28,7 @@ const DeleteConnectionModal = ({
   const formRef = useRef(null)
   const { t } = useTranslation('deleteConnection')
   const { addToast } = useToast()
-  const setConnections = useSetRecoilState(connectionsState)
+
 
   const [deleteConnectionLoading, toggleDeleteConnectionLoading] = useToggle(
     false
@@ -54,9 +55,7 @@ const DeleteConnectionModal = ({
           return
         }
 
-        const connections = deleteAndGetConnections(connectionToDelete)
-
-        setConnections(connections)
+        // const connections = deleteAndGetConnections(connectionToDelete);
 
         addToast({
           type: 'success',
@@ -80,7 +79,6 @@ const DeleteConnectionModal = ({
       t,
       addToast,
       connectionToDelete,
-      setConnections,
       handleCloseModal
     ]
   )

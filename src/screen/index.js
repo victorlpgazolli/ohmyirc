@@ -8,15 +8,15 @@ import KeyList from './KeyList'
 import { Container, Content, CurrentConnection } from './styles'
 
 const screen = () => {
-  const [conn, setConn] = useState()
+
   return (
     <Container>
       <Header />
       <Content>
-        <ConnectionsList setConn={setConn} />
+        <ConnectionsList />
         <CurrentConnection>
-          <KeyList conn={conn} />
-          <KeyContent conn={conn} />
+          <KeyList />
+          <KeyContent />
         </CurrentConnection>
       </Content>
     </Container>
