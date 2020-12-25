@@ -5,3 +5,8 @@ services:
     image: inspircd/inspircd-docker
     ports:
       - "6667:6667"
+  package:
+    image: electronuserland/builder
+    volumes:
+      - ./:/project
+    command: npm run package

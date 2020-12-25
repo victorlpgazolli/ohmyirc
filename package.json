@@ -4,8 +4,9 @@
   "description": "A beautiful IRC client",
   "keywords": [],
   "license": "MIT",
-  "author": "Victor Gazolli",
+  "author": "Victor Gazolli <victorlpgazolli@gmail.com>",
   "main": "./dist/main.js",
+  "homepage": "http://ohmyirc.ga/",
   "scripts": {
     "build": "rimraf dist && npm-run-all -p build:*",
     "build:electron": "cross-env NODE_ENV=production webpack --config webpack/electron.webpack.js",
@@ -134,12 +135,16 @@
     "files": [
       "dist/"
     ],
+    "win": {
+      "target": "nsis"
+    },
     "mac": {
       "category": "public.app-category.developer-tools"
     },
     "linux": {
+      "maintainer": "Victor Gazolli <victorlpgazolli@gmail.com>",
       "target": [
-        "AppImage"
+        "deb"
       ],
       "category": "Development"
     },
