@@ -4,10 +4,8 @@ import React, {
   useEffect,
   useRef,
   useCallback,
-  ChangeEvent,
   useMemo
 } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useDebounce } from 'react-use'
 import { useVirtual } from 'react-virtual'
 
@@ -39,10 +37,9 @@ const KeyList = () => {
     channels,
     connections,
     servers,
+    users: ircUsers,
   } = useSelector(state => state.irc);
-
   const { width } = useWindowSize({ watch: false })
-  const { t } = useTranslation('keyList')
 
   const [searchInputValue, setSearchInputValue] = useState('')
   const [filter, setFilter] = useState('')
@@ -93,16 +90,20 @@ const KeyList = () => {
   const user = useMemo(() => {
     return Array.isArray(channel?.users) && channel.users
       .filter(user => user.nick === channel?.irc_client?.user?.nick)
-      .shift();
-  }, [channel, selectedChannel])
+      .shift()
+  }, [channel?.users, selectedChannel, ircUsers?.[activeConnection?.options?.host]?.length])
 
   const filteredKeys = useMemo(() => {
-    if (!Array.isArray(channel?.users)) return []
 
-    if (!filter) return channel?.users
+    const host = activeConnection?.options?.host
+    const users = ircUsers?.[host];
 
-    return channel.users.filter(key => JSON.stringify(key).includes(filter))
-  }, [filter, channel?.users])
+    if (!Array.isArray(users)) return []
+
+    if (!filter) return users
+
+    return users.filter(key => JSON.stringify(key).includes(filter))
+  }, [filter, channel?.users, activeConnection?.options, ircUsers?.[activeConnection?.options?.host]])
 
   const rowVirtualizer = useVirtual({
     size: filteredKeys.length,
@@ -161,13 +162,13 @@ const KeyList = () => {
                 {
                   users?.length &&
                   <span>
-                    {users?.length} {t('users')}
+                    {users?.length} users
                   </span>
                 }
                 {
                   user?.modes &&
                   <span>
-                    {user?.modes} {t('mode')}
+                    {user?.modes} mode
                   </span>
                 }
               </HeaderDatabaseDetails>
@@ -222,7 +223,7 @@ const KeyList = () => {
       ) : (
           server?.motd
             ? <MessageOfTheDay motd={server?.motd} />
-            : <EmptyContent message={t('empty')} />
+            : <EmptyContent message={"No server selected"} />
         )}
     </Container>
   )

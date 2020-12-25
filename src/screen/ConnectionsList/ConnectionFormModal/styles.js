@@ -6,7 +6,7 @@ export const ActionsContainer = styled.div`
   display: flex;
   flex: 1;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: 24px;
 
   button {
@@ -42,8 +42,4 @@ export const ButtonGroup = styled.div`
       margin-right: 8px;
     }
   }
-`
-
-export const TestConnectionButton = styled(Button)`
-  width: 155px;
 `

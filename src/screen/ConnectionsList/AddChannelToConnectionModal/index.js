@@ -1,12 +1,7 @@
 import React, { useRef, useCallback, memo } from 'react'
-import { useTranslation, Trans } from 'react-i18next'
 import { FiSave } from 'react-icons/fi'
 import { useToggle } from 'react-use'
-
 import { Form } from '@unform/web'
-
-
-
 import Button from '../../../components/Button'
 import Input from '../../../components/Form/Input'
 import Modal from '../../../components/Modal'
@@ -18,7 +13,6 @@ const AddChannelToConnection = ({
     onRequestClose,
 }) => {
     const formRef = useRef(null)
-    const { t } = useTranslation('addChannelToConnection')
     const { addToast } = useToast()
 
 
@@ -35,7 +29,7 @@ const AddChannelToConnection = ({
 
                 if (!String(channel)) {
                     formRef.current?.setErrors({
-                        channel: t('form.missingChannelName')
+                        channel: "Channel name is required"
                     })
 
                     return
@@ -61,18 +55,17 @@ const AddChannelToConnection = ({
         },
         [
             toggleAddChannelToConnectionLoading,
-            t,
             addToast,
         ]
     )
 
     return (
         <Modal visible={visible} onRequestClose={() => onRequestClose()}>
-            <h1>{t('title')}</h1>
+            <h1>Add Channel</h1>
 
             <TextContent>
                 <p>
-                    <Trans t={t} i18nKey="AddChannelMessage" />
+                    Please enter the channel name:
                 </p>
             </TextContent>
 
@@ -82,12 +75,12 @@ const AddChannelToConnection = ({
                 <ActionsContainer>
                     <ButtonGroup>
                         <Button onClick={() => onRequestClose()} type="button" color="opaque">
-                            {t('form.cancel')}
+                            Cancel
                         </Button>
 
                         <Button loading={addChannelToConnectionLoading} type="submit" color="purple">
                             <FiSave />
-                            {t('form.save')}
+                            Save
                         </Button>
                     </ButtonGroup>
                 </ActionsContainer>

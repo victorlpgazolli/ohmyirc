@@ -1,5 +1,4 @@
 import React, { memo, useEffect, useState, useRef, useMemo, useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
 import { connections as storedConnections } from '../../store/connections'
 import EmptyContent from '../../components/EmptyContent'
 import { Container, MessageFrom, MessageContainer, Messages } from './styles'
@@ -14,14 +13,15 @@ import { saveMessageToConnection } from '../../services/connection/SaveMessageTo
 const KeyContent = () => {
   const {
     channels,
-    connections
+    connections,
+    users: ircUsers,
   } = useSelector(state => state.irc);
 
-  const { t } = useTranslation('keyContent')
   const parentRef = useRef(null)
 
   const [selectedChannel, setSelectedChannel] = useState(false)
   const [isListening, setListening] = useState(false)
+  const [user, setUser] = useState(false)
 
 
   const activeConnection = useMemo(
@@ -70,7 +70,10 @@ const KeyContent = () => {
 
     const allMessages = saveMessageToConnection(host, userMessage);
 
-    setKeyContent(allMessages);
+    const messagesFromThisChannel = allMessages
+      ?.filter(message => message?.channel === selectedChannel?.name) || [];
+
+    setKeyContent(messagesFromThisChannel);
   }, [setKeyContent, selectedChannel?.name])
 
   useEffect(() => {
@@ -96,14 +99,10 @@ const KeyContent = () => {
         ?.messages
         ?.filter(message => message?.channel === selectedChannel?.name) || [];
 
-      setKeyContent(messages);
+      if (JSON.stringify(keyContent) !== JSON.stringify(messages)) setKeyContent(messages);
     }
   }, [selectedChannel?.name, isListening, channels, connections, activeConnection]);
 
-  useEffect(() => {
-
-    rowVirtualizer.scrollToIndex(keyContent?.length - 1)
-  }, [keyContent?.length]);
 
   const handleAddMessage = useCallback(({
     message,
@@ -132,7 +131,7 @@ const KeyContent = () => {
   return (
     <Container ref={parentRef}>
       {!selectedChannel?.name ? (
-        <EmptyContent message={t('empty')} />
+        <EmptyContent message={"No channel selected"} />
       ) : (
           <>
             <Messages style={{

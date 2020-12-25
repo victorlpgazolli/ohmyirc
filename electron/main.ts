@@ -10,7 +10,6 @@ import { autoUpdater } from 'electron-updater'
 import * as path from 'path'
 import * as url from 'url'
 
-import i18n from '../i18n'
 import {
   getWindowBounds,
   setWindowBounds
@@ -59,14 +58,12 @@ function createWindow() {
 }
 
 async function createMenu() {
-  await i18n.loadNamespaces('applicationMenu')
-
   const template: MenuItemConstructorOptions[] = [
     {
-      label: 'ChatIRC',
+      label: 'OhMyIRC',
       submenu: [
         {
-          label: i18n.t('applicationMenu:newConnection'),
+          label: "New connection",
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             mainWindow?.webContents.send('newConnection')
@@ -76,7 +73,7 @@ async function createMenu() {
           type: 'separator'
         },
         {
-          label: i18n.t('applicationMenu:exit'),
+          label: "Quit",
           role: 'quit',
           accelerator: 'CmdOrCtrl+Q'
         }

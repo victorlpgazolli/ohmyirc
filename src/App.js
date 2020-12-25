@@ -10,7 +10,7 @@ import Screen from './screen'
 import { GlobalStyle } from './styles/GlobalStyle'
 import { defaultTheme } from './styles/theme'
 
-import '../i18n'
+import ErrorBoundary from './components/ErrorBoundary';
 
 Modal.setAppElement('#root')
 
@@ -20,7 +20,9 @@ const App = () => {
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider theme={defaultTheme}>
           <AppProvider>
-            <Screen />
+            <ErrorBoundary>
+              <Screen />
+            </ErrorBoundary>
           </AppProvider>
           <GlobalStyle />
         </ThemeProvider>

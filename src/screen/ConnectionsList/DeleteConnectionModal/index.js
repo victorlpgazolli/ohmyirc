@@ -1,5 +1,4 @@
 import React, { useRef, useCallback, memo } from 'react'
-import { useTranslation, Trans } from 'react-i18next'
 import { FiTrash } from 'react-icons/fi'
 import { useToggle } from 'react-use'
 
@@ -26,7 +25,6 @@ const DeleteConnectionModal = ({
   connectionToDelete
 }) => {
   const formRef = useRef(null)
-  const { t } = useTranslation('deleteConnection')
   const { addToast } = useToast()
 
 
@@ -49,7 +47,7 @@ const DeleteConnectionModal = ({
 
         if (deleteConfirmation !== 'DELETE') {
           formRef.current?.setErrors({
-            confirmation: t('form.unconfirmedDeletionError')
+            confirmation: "Could not confirm deletion."
           })
 
           return
@@ -76,7 +74,6 @@ const DeleteConnectionModal = ({
     },
     [
       toggleDeleteConnectionLoading,
-      t,
       addToast,
       connectionToDelete,
       handleCloseModal
@@ -85,21 +82,15 @@ const DeleteConnectionModal = ({
 
   return (
     <Modal visible={visible} onRequestClose={onRequestClose}>
-      <h1>{t('title')}</h1>
+      <h1>Delete connection</h1>
 
       <TextContent>
         <p>
-          <Trans
-            t={t}
-            i18nKey="deletingConnectionMessage"
-            values={{ name: connectionToDelete.name }}
-          >
-            The connection <strong>{connectionToDelete.name}</strong> will be permanently deleted.
-          </Trans>
+          The connection <strong>{connectionToDelete.name}</strong> will be permanently deleted.
         </p>
 
         <p>
-          <Trans t={t} i18nKey="confirmDeletionMessage" />
+          Please confirm your action by typing <strong>DELETE</strong> below:
         </p>
       </TextContent>
 
@@ -109,12 +100,12 @@ const DeleteConnectionModal = ({
         <ActionsContainer>
           <ButtonGroup>
             <Button onClick={handleCloseModal} type="button" color="opaque">
-              {t('form.cancel')}
+              Cancel
             </Button>
 
             <Button loading={deleteConnectionLoading} type="submit" color="red">
               <FiTrash />
-              {t('form.confirmDeletion')}
+              Confirm deletion
             </Button>
           </ButtonGroup>
         </ActionsContainer>

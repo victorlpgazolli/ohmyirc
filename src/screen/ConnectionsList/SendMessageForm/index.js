@@ -1,12 +1,7 @@
 import React, { useRef, useCallback, memo } from 'react'
-import { useTranslation } from 'react-i18next'
 import { FiSend } from 'react-icons/fi'
-
 import { Form } from '@unform/web'
-
 import * as Yup from 'yup'
-
-
 import Button from '../../../components/Button'
 import Input from '../../../components/Form/Input'
 import { useToast } from '../../../context/toast'
@@ -25,7 +20,6 @@ const SendMesssageForm = ({
     const formRef = useRef(null)
     const { addToast } = useToast()
 
-    const { t } = useTranslation('sendMessageForm')
 
     const handleSendMessage = useCallback(
         async (data) => {
@@ -97,7 +91,7 @@ const SendMesssageForm = ({
                     alignItems: "center"
                 }}
             >
-                <Input name="message" label={t('form.message')} />
+                <Input name="message" label={"Enter message"} />
 
                 <ActionsContainer>
                     <Button
@@ -105,7 +99,7 @@ const SendMesssageForm = ({
                         color="purple"
                     >
                         <FiSend />
-                        {t('form.send')}
+                        Send
                     </Button>
                 </ActionsContainer>
             </Form>

@@ -1,14 +1,10 @@
-import React, { memo, useCallback, useMemo, useState, useEffect, useRef } from 'react'
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react'
 import { ContextMenuTrigger, ContextMenu, MenuItem } from 'react-contextmenu'
-import { useTranslation } from 'react-i18next'
 import {
-  FiDatabase,
-  FiChevronRight,
   FiLoader,
   FiActivity,
   FiMinusCircle,
   FiEdit2,
-  FiRefreshCcw,
   FiTrash,
   FiPlusCircle
 } from 'react-icons/fi'
@@ -30,7 +26,6 @@ import {
   Loading,
   ConnectButton,
   DisconnectButton,
-  ConnectionButton
 } from './styles'
 import { ircActionCreators } from 'react-irc'
 import { defaultTheme } from '../../../styles/theme'
@@ -41,7 +36,9 @@ import { deleteAndGetConnections } from '../../../services/connection/DeleteConn
 const Connection = ({ connection }) => {
   const {
     connections,
-    channels
+    channels,
+    errors,
+    users
   } = useSelector(state => state.irc);
 
   const [connectionLoading, setConnectionLoading] = useState(false)
@@ -50,7 +47,6 @@ const Connection = ({ connection }) => {
   const [isDeleteModalOpen, toggleDeleteModalOpen] = useToggle(false)
   const [isAddChannelModalOpen, toggleAddChannelModalOpen] = useToggle(false)
   const [connected, setConnected] = useState(connections?.[connection?.host]?.connected);
-  const { t } = useTranslation('connection')
 
   const dispatch = useDispatch()
   const { addToast } = useToast()
@@ -61,11 +57,29 @@ const Connection = ({ connection }) => {
 
   }, [connections?.[connection?.host]?.connected])
 
+  useEffect(() => {
+
+    const errorPerHost = errors[connection?.host];
+
+    if (errorPerHost) {
+      console.log(errorPerHost);
+      addToast({
+        type: 'error',
+        title: errorPerHost?.error,
+        description: errorPerHost?.reason,
+      })
+
+      dispatch(ircActionCreators.removeError(connection))
+    }
+
+
+  }, [JSON.stringify(errors)])
+
   const ircConnection = connections?.[connection?.host];
 
   const connectionChannels = useMemo(
     () => channels[connection?.host] || [],
-    [Object.values(channels).flat().length, connection?.host]
+    [Object.values(channels).flat().length, connection?.host, users[connection?.host]?.length,]
   );
 
   const handleConnect = useCallback(async () => {
@@ -98,6 +112,7 @@ const Connection = ({ connection }) => {
         host: connection.host,
         port: connection.port,
         username: connection.username,
+        suppressMiddlewareErrors: false
       })(dispatch)
 
       dispatch(ircConnection);
@@ -120,11 +135,14 @@ const Connection = ({ connection }) => {
     setConnected
   ])
 
-  const handleDisconnect = useCallback(() => {
+  const handleDisconnect = useCallback(({
+    removeAfterDisconnect = false
+  }) => {
     if (!connection?.host) return;
 
     dispatch(ircActionCreators.disconnect({
-      host: connection.host
+      host: connection.host,
+      removeAfterDisconnect
     }))
     setConnected(false)
 
@@ -142,7 +160,9 @@ const Connection = ({ connection }) => {
 
   const postDeletingConnection = useCallback(() => {
     toggleDeleteModalOpen();
-    handleDisconnect()
+    handleDisconnect({
+      removeAfterDisconnect: true
+    })
     deleteAndGetConnections(connection);
   }, [toggleDeleteModalOpen, handleDisconnect])
 
@@ -195,7 +215,7 @@ const Connection = ({ connection }) => {
                 <FiLoader />
               </Loading>
             )}
-            {connection.host}
+            {connection.name}
 
           </button>
           {
@@ -215,32 +235,35 @@ const Connection = ({ connection }) => {
             <MenuItem onClick={handleDisconnect}>
               <DisconnectButton>
                 <FiMinusCircle />
-                {t('contextMenu.disconnect')}
+                Disconnect
               </DisconnectButton>
             </MenuItem>
           ) : (
               <MenuItem onClick={handleConnect}>
                 <ConnectButton>
                   <FiActivity />
-                  {t('contextMenu.connect')}
+                  Connect
                 </ConnectButton>
               </MenuItem>
             )}
 
-          <MenuItem onClick={toggleEditModalOpen}>
-            <FiEdit2 />
-            {t('contextMenu.editSettings')}
-          </MenuItem>
+          {
+            !connected &&
+            <MenuItem onClick={toggleEditModalOpen}>
+              <FiEdit2 />
+              Edit settings
+            </MenuItem>
+          }
 
           <MenuItem onClick={toggleDeleteModalOpen}>
             <FiTrash />
-            {t('contextMenu.deleteConnection')}
+            Delete connection
           </MenuItem>
           {
             connected && connectionChannels?.length === 0 && (
               <MenuItem onClick={toggleAddChannelModalOpen}>
                 <FiPlusCircle />
-                {t('contextMenu.addChannel')}
+                Add channel
               </MenuItem>
             )
           }
@@ -263,7 +286,7 @@ const Connection = ({ connection }) => {
                 <FiTrash />
                 <strong>{channel.name}</strong>
                 <span>
-                  {channel.keys} {t('channel')}
+                  {channel.keys} channel
                 </span>
               </Database>
             ))}
@@ -272,9 +295,9 @@ const Connection = ({ connection }) => {
 
         {isConnectionFailed && (
           <ConnectionError>
-            {t('connectionFailed')}{' '}
+            {'Connection failed. '}
             <button type="button" onClick={handleConnect}>
-              {t('retry')}
+              Retry?
             </button>
           </ConnectionError>
         )}
