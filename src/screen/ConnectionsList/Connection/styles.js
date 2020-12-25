@@ -134,7 +134,6 @@ export const DatabaseList = styled.div`
 
 export const Database = styled.button`
   width: 100%;
-  padding: 8px 16px;
   display: flex;
 
   flex-direction: row;
@@ -149,9 +148,14 @@ export const Database = styled.button`
 
   strong {
     font-size: 13px;
+    padding-left: 36px;
     font-weight: 500;
   }
-
+  position: relative;
+  svg {
+    position: absolute;
+    left: 20px;
+  }
   span {
     font-size: 12px;
     opacity: 0.6;

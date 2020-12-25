@@ -37,7 +37,8 @@ const KeyList = () => {
   const parentRef = useRef(null)
   const {
     channels,
-    connections
+    connections,
+    servers,
   } = useSelector(state => state.irc);
 
   const { width } = useWindowSize({ watch: false })
@@ -48,14 +49,16 @@ const KeyList = () => {
 
   const [selectedChannel, setSelectedChannel] = useState(false)
   const [users, setUsers] = useState([])
-  const loadUsersInterval = useRef(null)
-  const loadConfigInterval = useRef(null)
 
   const activeConnection = useMemo(
     () => Object.values(connections)
       .filter(({ connected }) => connected)
       .shift(),
     [Object.values(connections)]
+  )
+  const server = useMemo(
+    () => servers[activeConnection?.options?.host],
+    [channels, connections, activeConnection]
   )
 
   useEffect(() => {
@@ -217,10 +220,9 @@ const KeyList = () => {
           </KeyListWrapper>
         </>
       ) : (
-          // currentConnection?.motd
-          //   ? <MessageOfTheDay motd={currentConnection?.motd} />
-          //   : 
-          <EmptyContent message={t('empty')} />
+          server?.motd
+            ? <MessageOfTheDay motd={server?.motd} />
+            : <EmptyContent message={t('empty')} />
         )}
     </Container>
   )

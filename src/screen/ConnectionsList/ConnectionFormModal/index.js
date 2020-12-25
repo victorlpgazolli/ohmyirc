@@ -79,13 +79,15 @@ const ConnectionFormModal = ({
 
           const connections = connectionToEdit
             ? updateAndGetConnections(connectionToEdit, connectionData)
-            : createAndGetConnections(connectionData)
+            : createAndGetConnections(connectionData);
 
-          dispatch(await ircActionCreators.connect({
+          const ircConnection = await ircActionCreators.connect({
             host: connectionData.host,
             port: connectionData.port,
             username: connectionData.username,
-          }));
+          })(dispatch)
+
+          dispatch(ircConnection);
 
           addToast({
             type: 'success',

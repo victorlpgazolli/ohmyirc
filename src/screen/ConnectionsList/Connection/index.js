@@ -94,11 +94,13 @@ const Connection = ({ connection }) => {
 
       if (alreayIsConnectedToServer) return;
 
-      dispatch(await ircActionCreators.connect({
+      const ircConnection = await ircActionCreators.connect({
         host: connection.host,
         port: connection.port,
         username: connection.username,
-      }));
+      })(dispatch)
+
+      dispatch(ircConnection);
       setConnected(true);
 
       updateAndGetConnections(connection, {
@@ -113,9 +115,9 @@ const Connection = ({ connection }) => {
     }
   }, [
     connection,
-      ircConnection,
-      setIsConnectionFailed,
-      setConnected
+    ircConnection,
+    setIsConnectionFailed,
+    setConnected
   ])
 
   const handleDisconnect = useCallback(() => {
@@ -135,8 +137,8 @@ const Connection = ({ connection }) => {
 
   const postSavingChannel = useCallback((channel) => {
     toggleAddChannelModalOpen()
-    if (channel) handleSelectChannel(channel)
-  }, [toggleAddChannelModalOpen, handleSelectChannel])
+    if (channel) handleConnectToChannel(channel)
+  }, [toggleAddChannelModalOpen, handleConnectToChannel])
 
   const postDeletingConnection = useCallback(() => {
     toggleDeleteModalOpen();
@@ -144,11 +146,25 @@ const Connection = ({ connection }) => {
     deleteAndGetConnections(connection);
   }, [toggleDeleteModalOpen, handleDisconnect])
 
-  const handleSelectChannel = useCallback((channel) => {
+  const handleLeaveChannel = useCallback((channel) => {
     try {
-      const alreayJoinedChannel = connectionChannels.some(channel => channel.name === channel?.name);
+      dispatch(ircActionCreators.leave({
+        channel: channel?.name,
+        host: connection?.host
+      }));
 
-      if (alreayJoinedChannel) return;
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Failed to connect to channel',
+        description:
+          'A connection to this IRC channel could not be established.'
+      })
+    }
+  }, [addToast, ircActionCreators.leave, dispatch]);
+
+  const handleConnectToChannel = useCallback((channel) => {
+    try {
 
       dispatch(ircActionCreators.join({
         channel: channel?.name,
@@ -163,7 +179,7 @@ const Connection = ({ connection }) => {
           'A connection to this IRC channel could not be established.'
       })
     }
-  }, [dispatch, ircActionCreators.join, connection])
+  }, [addToast, dispatch, ircActionCreators.join, connection])
 
   return (
     <>
@@ -183,7 +199,7 @@ const Connection = ({ connection }) => {
 
           </button>
           {
-            connected && (
+            connected && connectionChannels?.length === 0 && (
               <a disabled={connected} onClick={toggleAddChannelModalOpen}>
                 <FiPlusCircle />
               </a>
@@ -221,7 +237,7 @@ const Connection = ({ connection }) => {
             {t('contextMenu.deleteConnection')}
           </MenuItem>
           {
-            connected && (
+            connected && connectionChannels?.length === 0 && (
               <MenuItem onClick={toggleAddChannelModalOpen}>
                 <FiPlusCircle />
                 {t('contextMenu.addChannel')}
@@ -241,9 +257,10 @@ const Connection = ({ connection }) => {
                 }}
                 key={channel.name}
                 className={"channel:name:" + channel.name}
-                onClick={() => handleSelectChannel(channel)}
+                onClick={() => handleLeaveChannel(channel)}
                 type="button"
               >
+                <FiTrash />
                 <strong>{channel.name}</strong>
                 <span>
                   {channel.keys} {t('channel')}
