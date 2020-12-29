@@ -6,9 +6,10 @@ Oh My IRC is a Graphic User Interface IRC client for chatting with ease
 
 🚧 **Oh My Irc is under development** 🚧
 
-## Official Site
+## Sites
 
-https://ohmyirc.ga
+- https://ohmyirc.ga
+- https://snapcraft.io/ohmyirc
 
 ## Installing
 
