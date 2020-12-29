@@ -55,3 +55,4 @@ See packaging docs: https://www.electron.build/cli
 
 Runs the packager and outputs into release folder <br/>
 
+UI based on [rocketredis](https://github.com/diego3g/rocketredis)
