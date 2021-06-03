@@ -6,6 +6,7 @@ import Connection from './Connection'
 import ConnectionFormModal from './ConnectionFormModal'
 import { Container, Connections } from './styles'
 import { connections } from '../../store/connections'
+import Author from '../../components/Author'
 
 const ConnectionsList = () => {
   const [isCreateModalOpen, toggleCreateModalOpen] = useToggle(false);
@@ -42,6 +43,7 @@ const ConnectionsList = () => {
             ))}
           </ul>
         </Connections>
+        <Author />
       </Container>
 
       <ConnectionFormModal
