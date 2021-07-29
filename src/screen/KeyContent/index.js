@@ -1,12 +1,11 @@
 import React, { memo, useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { connections as storedConnections } from '../../store/connections'
 import EmptyContent from '../../components/EmptyContent'
-import { Container, MessageFrom, MessageContainer, Messages } from './styles'
-import { defaultTheme } from '../../styles/theme'
+import { Container, MessageFrom, MessageContainer, Messages, MessagePayload, MessageTimestamp } from './styles'
 
 import SendMessageForm from '../ConnectionsList/SendMessageForm'
 import { useSelector } from 'react-redux'
-import { useVirtual } from 'react-virtual'
+import { format } from 'date-fns'
 import { useWindowSize } from '../../hooks/useWindowSize'
 import { saveMessageToConnection } from '../../services/connection/SaveMessageToConnection'
 
@@ -20,8 +19,11 @@ const KeyContent = () => {
   const parentRef = useRef(null)
 
   const [selectedChannel, setSelectedChannel] = useState(false)
-  const [isListening, setListening] = useState(false)
-  const [user, setUser] = useState(false)
+  const [isListening, setListening] = useState(false);
+
+  const user = useMemo(() => {
+    return selectedChannel?.irc_client?.user
+  }, [selectedChannel])
 
 
   const activeConnection = useMemo(
@@ -34,11 +36,13 @@ const KeyContent = () => {
   const [keyContent, setKeyContent] = useState([]);
 
 
-  const rowVirtualizer = useVirtual({
-    size: keyContent?.length,
-    parentRef,
-    estimateSize: useCallback(() => 33, [])
-  })
+
+  useEffect(() => {
+    try {
+      Array.from(document.getElementById("messages_list")?.children || []).slice().pop()?.scrollIntoViewIfNeeded?.();
+    } catch (error) { }
+  }, [keyContent.length]);
+
   useEffect(() => {
     const {
       host
@@ -103,7 +107,6 @@ const KeyContent = () => {
     }
   }, [selectedChannel?.name, isListening, channels, connections, activeConnection]);
 
-
   const handleAddMessage = useCallback(({
     message,
     nick,
@@ -138,20 +141,36 @@ const KeyContent = () => {
               height: height - 150,
               paddingBottom: "10px"
             }}>
-              <Messages style={{
-                height: `${rowVirtualizer.totalSize}px`,
+              <Messages id="messages_list" style={{
                 overflowY: "scroll"
               }}>
-                {rowVirtualizer.virtualItems.map((virtualRow) => {
-                  const key = keyContent[virtualRow.index]
+                {keyContent.map((key) => {
+                  const isSender = key.from === user.nick;
+
                   return (
-                    <MessageContainer>
+                    <MessageContainer isSender={isSender}>
+                      <div style={{
+                        width: "120px"
+                      }}>
                       <MessageFrom
                         show={1}
+                          isSender={isSender}
                       >
                         {key.from}
                       </MessageFrom>
-                      {key.message}
+                        <MessageTimestamp
+
+                        >
+                          {format(new Date(key.time), "dd/MM/yyyyy HH:mm:ss")}
+                        </MessageTimestamp>
+                      </div>
+                      <MessagePayload
+                        show={1}
+                        isSender={isSender}
+                      >
+                        {key.message}
+                      </MessagePayload>
+
                     </MessageContainer>
                   )
                 })}
