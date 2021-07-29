@@ -1,12 +1,12 @@
 {
   "name": "ohmyirc",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A beautiful IRC client",
   "keywords": [],
+  "homepage": "http://ohmyirc.ga/",
   "license": "MIT",
   "author": "Victor Gazolli <victorlpgazolli@gmail.com>",
   "main": "./dist/main.js",
-  "homepage": "http://ohmyirc.ga/",
   "scripts": {
     "build": "rimraf dist && npm-run-all -p build:*",
     "build:electron": "cross-env NODE_ENV=production webpack --config webpack/electron.webpack.js",
@@ -16,11 +16,11 @@
     "dev:react": "cross-env NODE_ENV=development webpack-dev-server --config webpack/react.webpack.js",
     "electron:serve": "wait-on http-get://localhost:4000/ && npm run dev:electron",
     "postinstall": "electron-builder install-app-deps",
+    "irc": "cd node_modules/react-irc/; rm rollup.config.js; cp ../../../react-irc/rollup.config.js .; npm i; npm run build",
     "lint": "eslint --ext .tsx,.ts,.js src/ electron/",
     "package": "yarn build && electron-builder build --publish never",
     "test": "jest --passWithNoTests",
-    "tsc": "tsc --noEmit",
-    "irc": "cd node_modules/react-irc/; rm rollup.config.js; cp ../../../react-irc/rollup.config.js .; npm i; npm run build"
+    "tsc": "tsc --noEmit"
   },
   "husky": {
     "hooks": {
@@ -98,11 +98,11 @@
     "@typescript-eslint/eslint-plugin": "3.7.1",
     "@typescript-eslint/parser": "3.7.1",
     "babel-loader": "8.1.0",
-    "commitizen": "4.1.2",
+    "commitizen": "4.2.4",
     "cross-env": "7.0.2",
     "cz-conventional-changelog": "3.2.0",
     "electron": "9.1.2",
-    "electron-builder": "22.8.0",
+    "electron-builder": "22.11.10",
     "eslint": "7.5.0",
     "eslint-config-prettier": "6.11.0",
     "eslint-config-standard": "14.1.1",
