@@ -118,23 +118,6 @@ const KeyList = () => {
     []
   )
 
-  // useEffect(() => {
-  //   const conn = Object.assign({}, currentConnection)
-  //   if (conn) {
-
-  //     loadConfigInterval.current = setTimeout(() => {
-  //       if (!window.ircConnection) return;
-
-  //       const config = loadConfigFromConnection();
-
-  //       setCurrentConnection(c => ({
-  //         ...c,
-  //         ...config
-  //       }))
-  //     }, 1000);
-  //   }
-  // }, [JSON.stringify(currentConnection)])
-
   useEffect(() => {
     const {
       host
