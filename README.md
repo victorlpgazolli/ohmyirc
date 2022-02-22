@@ -8,7 +8,7 @@ Oh My IRC is a Graphic User Interface IRC client for chatting with ease
 
 ## Sites
 
-- https://ohmyirc.ga
+- https://ohmyirc.victorlpgazolli.dev
 - https://snapcraft.io/ohmyirc
 
 ## Installing
@@ -17,7 +17,7 @@ Oh My IRC is a Graphic User Interface IRC client for chatting with ease
 $ sudo snap install ohmyirc
 ```
 
-Or visit: https://ohmyirc.ga/download/all.html
+Or visit: https://ohmyirc.victorlpgazolli.dev/download/all.html
 
 ## Building
 

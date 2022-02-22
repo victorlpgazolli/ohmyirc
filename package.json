@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "description": "A beautiful IRC client",
   "keywords": [],
-  "homepage": "http://ohmyirc.ga/",
+  "homepage": "http://ohmyirc.victorlpgazolli.dev/",
   "license": "MIT",
   "author": "Victor Gazolli <victorlpgazolli@gmail.com>",
   "main": "./dist/main.js",
